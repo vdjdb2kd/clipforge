@@ -1,0 +1,679 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>ClipForge</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=DM+Sans:wght@400;500;600&display=swap" rel="stylesheet">
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    :root {
+      --bg:       #080809;
+      --surface:  #111113;
+      --card:     #16161a;
+      --border:   #222228;
+      --accent:   #7c3aed;
+      --accent2:  #f43f5e;
+      --cyan:     #06b6d4;
+      --text:     #f1f0f5;
+      --muted:    #6b6b7e;
+      --success:  #10b981;
+    }
+
+    html { scroll-behavior: smooth; }
+
+    body {
+      background: var(--bg);
+      color: var(--text);
+      font-family: 'DM Sans', sans-serif;
+      min-height: 100vh;
+      overflow-x: hidden;
+    }
+
+    /* ── noise overlay ── */
+    body::before {
+      content: '';
+      position: fixed;
+      inset: 0;
+      background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='0.04'/%3E%3C/svg%3E");
+      pointer-events: none;
+      z-index: 0;
+      opacity: 0.35;
+    }
+
+    /* ── glow blob ── */
+    .glow {
+      position: fixed;
+      top: -200px;
+      left: 50%;
+      transform: translateX(-50%);
+      width: 900px;
+      height: 600px;
+      background: radial-gradient(ellipse, rgba(124,58,237,0.18) 0%, transparent 70%);
+      pointer-events: none;
+      z-index: 0;
+    }
+
+    main {
+      position: relative;
+      z-index: 1;
+      max-width: 680px;
+      margin: 0 auto;
+      padding: 64px 20px 80px;
+    }
+
+    /* ── Header ── */
+    header {
+      text-align: center;
+      margin-bottom: 56px;
+    }
+
+    .logo {
+      display: inline-flex;
+      align-items: center;
+      gap: 10px;
+      margin-bottom: 20px;
+    }
+
+    .logo-icon {
+      width: 44px;
+      height: 44px;
+      background: linear-gradient(135deg, var(--accent), var(--accent2));
+      border-radius: 12px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 22px;
+    }
+
+    .logo-text {
+      font-family: 'Bebas Neue', sans-serif;
+      font-size: 2.4rem;
+      letter-spacing: 2px;
+      background: linear-gradient(90deg, #fff 40%, var(--muted));
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      background-clip: text;
+    }
+
+    .tagline {
+      color: var(--muted);
+      font-size: 0.95rem;
+      line-height: 1.6;
+      max-width: 420px;
+      margin: 0 auto;
+    }
+
+    .tagline span {
+      color: var(--text);
+      font-weight: 600;
+    }
+
+    /* ── Badges ── */
+    .badges {
+      display: flex;
+      justify-content: center;
+      gap: 10px;
+      margin-top: 20px;
+      flex-wrap: wrap;
+    }
+
+    .badge {
+      font-size: 0.72rem;
+      font-weight: 600;
+      letter-spacing: 0.06em;
+      text-transform: uppercase;
+      padding: 4px 12px;
+      border-radius: 999px;
+      border: 1px solid var(--border);
+      color: var(--muted);
+    }
+
+    .badge.live { border-color: var(--accent2); color: var(--accent2); }
+
+    /* ── Input card ── */
+    .input-card {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 20px;
+      padding: 32px;
+      margin-bottom: 28px;
+    }
+
+    .field-label {
+      font-size: 0.75rem;
+      font-weight: 600;
+      letter-spacing: 0.1em;
+      text-transform: uppercase;
+      color: var(--muted);
+      margin-bottom: 10px;
+      display: block;
+    }
+
+    .input-row {
+      display: flex;
+      gap: 10px;
+    }
+
+    input[type="text"] {
+      flex: 1;
+      background: var(--bg);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      color: var(--text);
+      font-family: 'DM Sans', sans-serif;
+      font-size: 0.95rem;
+      padding: 14px 16px;
+      outline: none;
+      transition: border-color 0.2s, box-shadow 0.2s;
+      min-width: 0;
+    }
+
+    input[type="text"]::placeholder { color: var(--muted); }
+
+    input[type="text"]:focus {
+      border-color: var(--accent);
+      box-shadow: 0 0 0 3px rgba(124,58,237,0.15);
+    }
+
+    .submit-btn {
+      background: linear-gradient(135deg, var(--accent), #6d28d9);
+      color: #fff;
+      border: none;
+      border-radius: 12px;
+      font-family: 'Bebas Neue', sans-serif;
+      font-size: 1.1rem;
+      letter-spacing: 1px;
+      padding: 0 28px;
+      cursor: pointer;
+      transition: opacity 0.2s, transform 0.1s, box-shadow 0.2s;
+      white-space: nowrap;
+      box-shadow: 0 4px 24px rgba(124,58,237,0.35);
+    }
+
+    .submit-btn:hover { opacity: 0.9; box-shadow: 0 6px 32px rgba(124,58,237,0.5); }
+    .submit-btn:active { transform: scale(0.97); }
+    .submit-btn:disabled { opacity: 0.4; cursor: not-allowed; box-shadow: none; }
+
+    .supported {
+      margin-top: 14px;
+      font-size: 0.78rem;
+      color: var(--muted);
+    }
+
+    .supported strong { color: var(--text); }
+
+    /* ── Status ── */
+    #status-area { display: none; }
+
+    .status-card {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 20px;
+      padding: 28px 32px;
+      margin-bottom: 20px;
+      display: flex;
+      align-items: center;
+      gap: 18px;
+    }
+
+    .spinner {
+      width: 32px;
+      height: 32px;
+      border: 3px solid var(--border);
+      border-top-color: var(--accent);
+      border-radius: 50%;
+      animation: spin 0.75s linear infinite;
+      flex-shrink: 0;
+    }
+
+    @keyframes spin { to { transform: rotate(360deg); } }
+
+    .status-info { flex: 1; }
+
+    .status-label {
+      font-size: 0.72rem;
+      font-weight: 600;
+      letter-spacing: 0.1em;
+      text-transform: uppercase;
+      color: var(--accent);
+      margin-bottom: 4px;
+    }
+
+    #status-text {
+      font-size: 0.95rem;
+      color: var(--text);
+    }
+
+    /* ── Progress bar ── */
+    .progress-track {
+      height: 3px;
+      background: var(--border);
+      border-radius: 999px;
+      margin-top: 14px;
+      overflow: hidden;
+    }
+
+    .progress-fill {
+      height: 100%;
+      background: linear-gradient(90deg, var(--accent), var(--cyan));
+      border-radius: 999px;
+      width: 0%;
+      transition: width 0.6s ease;
+      animation: shimmer 1.5s infinite;
+    }
+
+    @keyframes shimmer {
+      0% { opacity: 1; }
+      50% { opacity: 0.6; }
+      100% { opacity: 1; }
+    }
+
+    /* ── Error ── */
+    .error-card {
+      background: rgba(244,63,94,0.08);
+      border: 1px solid rgba(244,63,94,0.3);
+      border-radius: 16px;
+      padding: 20px 24px;
+      color: var(--accent2);
+      font-size: 0.9rem;
+      display: flex;
+      gap: 12px;
+      align-items: flex-start;
+    }
+
+    /* ── Clips ── */
+    #clips-area {
+      display: flex;
+      flex-direction: column;
+      gap: 14px;
+      margin-top: 8px;
+    }
+
+    .section-title {
+      font-family: 'Bebas Neue', sans-serif;
+      font-size: 1.3rem;
+      letter-spacing: 1px;
+      color: var(--muted);
+      margin-bottom: 4px;
+    }
+
+    .clip-card {
+      background: var(--card);
+      border: 1px solid var(--border);
+      border-radius: 16px;
+      padding: 20px 22px;
+      display: grid;
+      grid-template-columns: auto 1fr auto;
+      gap: 16px;
+      align-items: center;
+      transition: border-color 0.2s, transform 0.15s;
+    }
+
+    .clip-card:hover {
+      border-color: rgba(124,58,237,0.4);
+      transform: translateY(-1px);
+    }
+
+    .score-ring {
+      width: 52px;
+      height: 52px;
+      border-radius: 50%;
+      border: 2px solid var(--accent);
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      flex-shrink: 0;
+    }
+
+    .score-num {
+      font-family: 'Bebas Neue', sans-serif;
+      font-size: 1.4rem;
+      color: var(--accent);
+      line-height: 1;
+    }
+
+    .score-denom {
+      font-size: 0.6rem;
+      color: var(--muted);
+    }
+
+    .clip-body { min-width: 0; }
+
+    .clip-hook {
+      font-weight: 600;
+      font-size: 0.9rem;
+      color: var(--text);
+      margin-bottom: 4px;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+
+    .clip-meta {
+      font-size: 0.75rem;
+      color: var(--muted);
+      display: flex;
+      gap: 10px;
+    }
+
+    .clip-preview {
+      font-size: 0.78rem;
+      color: var(--muted);
+      margin-top: 6px;
+      line-height: 1.45;
+      display: -webkit-box;
+      -webkit-line-clamp: 2;
+      -webkit-box-orient: vertical;
+      overflow: hidden;
+    }
+
+    .dl-btn {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      gap: 4px;
+      background: transparent;
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      padding: 12px 16px;
+      color: var(--muted);
+      text-decoration: none;
+      font-size: 0.75rem;
+      font-weight: 600;
+      transition: border-color 0.2s, color 0.2s, background 0.2s;
+      white-space: nowrap;
+    }
+
+    .dl-btn:hover {
+      border-color: var(--accent);
+      color: var(--accent);
+      background: rgba(124,58,237,0.08);
+    }
+
+    .dl-icon { font-size: 1.2rem; }
+
+    /* ── Done banner ── */
+    .done-banner {
+      background: rgba(16,185,129,0.08);
+      border: 1px solid rgba(16,185,129,0.25);
+      border-radius: 14px;
+      padding: 16px 20px;
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      margin-bottom: 20px;
+      font-size: 0.9rem;
+      color: var(--success);
+    }
+
+    /* ── Steps ── */
+    .steps {
+      display: flex;
+      justify-content: center;
+      gap: 32px;
+      margin-top: 48px;
+      flex-wrap: wrap;
+    }
+
+    .step {
+      text-align: center;
+      max-width: 140px;
+    }
+
+    .step-icon {
+      font-size: 1.8rem;
+      margin-bottom: 8px;
+    }
+
+    .step-label {
+      font-size: 0.78rem;
+      color: var(--muted);
+      line-height: 1.5;
+    }
+
+    .step-label strong {
+      display: block;
+      color: var(--text);
+      font-size: 0.85rem;
+      margin-bottom: 2px;
+    }
+
+    .divider {
+      width: 1px;
+      height: 40px;
+      background: var(--border);
+      margin: auto 0;
+    }
+
+    @media (max-width: 480px) {
+      .input-row { flex-direction: column; }
+      .submit-btn { padding: 14px; }
+      .divider { display: none; }
+      .clip-card { grid-template-columns: auto 1fr; }
+      .dl-btn { grid-column: 1 / -1; flex-direction: row; justify-content: center; }
+    }
+  </style>
+</head>
+<body>
+<div class="glow"></div>
+
+<main>
+  <header>
+    <div class="logo">
+      <div class="logo-icon">⚡</div>
+      <div class="logo-text">ClipForge</div>
+    </div>
+    <p class="tagline">
+      Paste any stream or video URL.<br>
+      Get <span>viral short clips</span> with subtitles — automatically.
+    </p>
+    <div class="badges">
+      <span class="badge">Twitch</span>
+      <span class="badge">YouTube</span>
+      <span class="badge">Whisper AI</span>
+      <span class="badge live">● Free</span>
+    </div>
+  </header>
+
+  <!-- Input -->
+  <div class="input-card">
+    <label class="field-label" for="url-input">Video URL</label>
+    <div class="input-row">
+      <input
+        type="text"
+        id="url-input"
+        placeholder="https://twitch.tv/videos/... or youtube.com/watch?v=..."
+        autocomplete="off"
+        autocorrect="off"
+        spellcheck="false"
+      />
+      <button class="submit-btn" id="submit-btn" onclick="startProcessing()">
+        FORGE
+      </button>
+    </div>
+    <p class="supported">
+      Supports <strong>Twitch VODs</strong>, <strong>YouTube</strong>, and most public video URLs.
+    </p>
+  </div>
+
+  <!-- Status -->
+  <div id="status-area">
+    <div class="status-card" id="status-card">
+      <div class="spinner" id="spinner"></div>
+      <div class="status-info">
+        <div class="status-label">Processing</div>
+        <div id="status-text">Starting pipeline...</div>
+        <div class="progress-track">
+          <div class="progress-fill" id="progress-fill"></div>
+        </div>
+      </div>
+    </div>
+    <div id="clips-area"></div>
+  </div>
+
+  <!-- How it works -->
+  <div class="steps">
+    <div class="step">
+      <div class="step-icon">🔗</div>
+      <div class="step-label"><strong>Paste URL</strong>Any Twitch or YouTube link</div>
+    </div>
+    <div class="divider"></div>
+    <div class="step">
+      <div class="step-icon">🧠</div>
+      <div class="step-label"><strong>AI Analysis</strong>Finds the best moments</div>
+    </div>
+    <div class="divider"></div>
+    <div class="step">
+      <div class="step-icon">✂️</div>
+      <div class="step-label"><strong>Auto Clip</strong>Cut, subtitled, vertical</div>
+    </div>
+    <div class="divider"></div>
+    <div class="step">
+      <div class="step-icon">📱</div>
+      <div class="step-label"><strong>Download</strong>Ready for TikTok & Reels</div>
+    </div>
+  </div>
+</main>
+
+<script>
+  let pollInterval = null;
+
+  const STAGES = [
+    { match: "audio",       label: "Downloading audio...",         pct: 15 },
+    { match: "video",       label: "Downloading video...",         pct: 30 },
+    { match: "transcrib",   label: "Transcribing with Whisper...", pct: 55 },
+    { match: "highlight",   label: "Finding viral moments...",     pct: 70 },
+    { match: "clip",        label: "Cutting & subtitling clips...", pct: 85 },
+    { match: "done",        label: "Done!",                        pct: 100 },
+  ];
+
+  function getStage(statusText) {
+    const t = statusText.toLowerCase();
+    for (const s of STAGES) {
+      if (t.includes(s.match)) return s;
+    }
+    return { label: statusText, pct: 10 };
+  }
+
+  async function startProcessing() {
+    const url = document.getElementById("url-input").value.trim();
+    if (!url) { alert("Please paste a video URL."); return; }
+
+    const btn = document.getElementById("submit-btn");
+    btn.disabled = true;
+    btn.textContent = "FORGING...";
+
+    document.getElementById("status-area").style.display = "block";
+    document.getElementById("clips-area").innerHTML = "";
+    document.getElementById("status-card").style.display = "flex";
+    document.getElementById("spinner").style.display = "block";
+    document.getElementById("status-text").textContent = "Starting...";
+    document.getElementById("progress-fill").style.width = "5%";
+
+    try {
+      const res = await fetch("/process", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ url })
+      });
+      const data = await res.json();
+      if (data.error) { showError(data.error); return; }
+      pollStatus(data.job_id);
+    } catch (err) {
+      showError("Could not reach the server. Is it running?");
+    }
+  }
+
+  function pollStatus(jobId) {
+    if (pollInterval) clearInterval(pollInterval);
+
+    pollInterval = setInterval(async () => {
+      try {
+        const res = await fetch(`/status/${jobId}`);
+        const job = await res.json();
+
+        const stage = getStage(job.status);
+        document.getElementById("status-text").textContent = stage.label;
+        document.getElementById("progress-fill").style.width = stage.pct + "%";
+
+        if (job.status === "done") {
+          clearInterval(pollInterval);
+          showClips(job);
+        } else if (job.status === "error") {
+          clearInterval(pollInterval);
+          showError(job.error || "Something went wrong.");
+        }
+      } catch (_) {}
+    }, 2000);
+  }
+
+  function showClips(job) {
+    document.getElementById("spinner").style.display = "none";
+    document.getElementById("submit-btn").disabled = false;
+    document.getElementById("submit-btn").textContent = "FORGE";
+
+    const area = document.getElementById("clips-area");
+
+    if (!job.clips || job.clips.length === 0) {
+      document.getElementById("status-text").textContent = job.message || "No highlights found.";
+      return;
+    }
+
+    document.getElementById("status-card").innerHTML = `
+      <div class="done-banner" style="width:100%">
+        <span>✅</span>
+        <span>${job.clips.length} clips forged and ready to download</span>
+      </div>
+    `;
+
+    area.innerHTML = `<div class="section-title">Your Clips</div>`;
+
+    job.clips.forEach((clip, i) => {
+      const card = document.createElement("div");
+      card.className = "clip-card";
+      card.innerHTML = `
+        <div class="score-ring">
+          <div class="score-num">${clip.score}</div>
+          <div class="score-denom">/10</div>
+        </div>
+        <div class="clip-body">
+          <div class="clip-hook">${clip.hook}</div>
+          <div class="clip-meta">
+            <span>Clip ${i+1}</span>
+            <span>·</span>
+            <span>${clip.duration}s</span>
+          </div>
+          <div class="clip-preview">${clip.preview}</div>
+        </div>
+        <a class="dl-btn" href="/download/${clip.filename}" download>
+          <span class="dl-icon">↓</span>
+          <span>MP4</span>
+        </a>
+      `;
+      area.appendChild(card);
+    });
+  }
+
+  function showError(msg) {
+    document.getElementById("status-card").innerHTML = `
+      <div class="error-card" style="width:100%">
+        <span>❌</span>
+        <span>${msg}</span>
+      </div>
+    `;
+    document.getElementById("submit-btn").disabled = false;
+    document.getElementById("submit-btn").textContent = "FORGE";
+  }
+
+  // Allow Enter key to submit
+  document.getElementById("url-input").addEventListener("keydown", e => {
+    if (e.key === "Enter") startProcessing();
+  });
+</script>
+</body>
+</html>
