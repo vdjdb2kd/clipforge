@@ -3,6 +3,12 @@ import subprocess, os, re, whisper, yt_dlp
 OUTPUTS = "outputs"
 os.makedirs(OUTPUTS, exist_ok=True)
 
+# Install ffmpeg at runtime if not found
+try:
+    subprocess.run(["ffmpeg", "-version"], capture_output=True, check=True)
+except (subprocess.CalledProcessError, FileNotFoundError):
+    os.system("apt-get install -y ffmpeg")
+
 HYPE_WORDS = [
     "insane", "crazy", "bro", "no way", "what", "holy", "clip it",
     "let's go", "omg", "oh my god", "wait", "actually", "literally",
