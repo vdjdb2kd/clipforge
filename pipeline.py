@@ -1,4 +1,6 @@
 import subprocess, os, re, whisper, yt_dlp
+import imageio_ffmpeg
+os.environ["PATH"] += os.pathsep + os.path.dirname(imageio_ffmpeg.get_ffmpeg_exe())
 
 OUTPUTS = "outputs"
 os.makedirs(OUTPUTS, exist_ok=True)
